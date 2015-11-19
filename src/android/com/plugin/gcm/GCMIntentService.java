@@ -44,11 +44,11 @@ public class GCMIntentService extends GCMBaseIntentService {
         if (extras != null) {
 
             // If in background, create notification to display in notification center
-            if (!isAppInForeground) {
-                if (extras.getString(MESSAGE) != null && extras.getString(MESSAGE).length() != 0) {
+//            if (!isAppInForeground) {
+//                if (extras.getString(MESSAGE) != null && extras.getString(MESSAGE).length() != 0) {
                     createNotification(context, extras);
-                }
-            }
+//                }
+//            }
 
             NotificationService.getInstance(context).onMessage(extras);
         }
