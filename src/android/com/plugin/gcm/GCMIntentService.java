@@ -42,7 +42,6 @@ public class GCMIntentService extends GCMBaseIntentService {
 
         Bundle extras = intent.getExtras();
         if (extras != null) {
-
             // If in background, create notification to display in notification center
 //            if (!isAppInForeground) {
 //                if (extras.getString(MESSAGE) != null && extras.getString(MESSAGE).length() != 0) {
@@ -74,24 +73,31 @@ public class GCMIntentService extends GCMBaseIntentService {
             } catch (NumberFormatException e) {
             }
         }
+        
+        String title   = extras.getString("title"  );
+        String message = extras.getString("message");
 
+        if(message == null && title !=null){
+        	message = title;
+        	title = "mySchaffNet";
+        }
+        
+        if (message == null){
+        	message = "<missing message content>";
+        }
+        
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context)
                         .setDefaults(defaults)
                         .setSmallIcon(context.getApplicationInfo().icon)
                         .setWhen(System.currentTimeMillis())
-                        .setContentTitle(extras.getString("title"))
-                        .setTicker(extras.getString("title"))
+                        .setContentTitle(title)
+                        .setTicker(title)
                         .setContentIntent(contentIntent)
-                        .setAutoCancel(true);
-
-        String message = extras.getString("message");
-        if (message != null) {
-            mBuilder.setContentText(message);
-        } else {
-            mBuilder.setContentText("<missing message content>");
-        }
-
+                        .setAutoCancel(true)
+                        .setContentText(message)
+        ;
+        
         String msgcnt = extras.getString("msgcnt");
         if (msgcnt != null) {
             mBuilder.setNumber(Integer.parseInt(msgcnt));
