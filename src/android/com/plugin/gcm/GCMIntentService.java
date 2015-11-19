@@ -75,16 +75,22 @@ public class GCMIntentService extends GCMBaseIntentService {
         }
         
         String title   = extras.getString("title"  );
+        String header  = extras.getString("header" );
         String message = extras.getString("message");
 
         if(message == null && title !=null){
         	message = title;
-        	title = "mySchaffNet";
+        	title = null;
         }
         
-        if (message == null){
+        if(header != null)
+        	title = header;
+        
+        if(title ==  null)
+        	title = "mySchaffNet";
+        
+        if(message == null)
         	message = "<missing message content>";
-        }
         
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context)
