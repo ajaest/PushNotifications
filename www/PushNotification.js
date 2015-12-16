@@ -1,4 +1,4 @@
-cordova.define("com.appgyver.plugins.PushNotifications.PushNotification", function(require, exports, module) { 
+
   var exec = require('cordova/exec');
 
   var PushNotification = function() {};
@@ -130,4 +130,3 @@ cordova.define("com.appgyver.plugins.PushNotifications.PushNotification", functi
 
   module.exports = PushNotification;
 
-});
