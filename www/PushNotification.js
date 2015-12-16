@@ -1,4 +1,4 @@
-
+cordova.define("com.appgyver.plugins.PushNotifications.PushNotification", function(require, exports, module) { 
   var exec = require('cordova/exec');
 
   var PushNotification = function() {};
@@ -89,6 +89,36 @@
     exec(successCallback, errorCallback, "PushPlugin", "setApplicationIconBadgeNumber", [{badge: badge}]);
   };
 
+  var lastTappedNotification;
+
+  PushNotification.prototype._onNotificationTapped = function (notification){
+    lastTappedNotification = {};
+
+    for (var attr_name in notification){
+      lastTappedNotification[attr_name] = notification[attr_name];
+    }
+
+    var event = new CustomEvent('notificationTapped', {detail: notification});
+
+    window.dispatchEvent(event);
+  };
+
+  // Get immutable notification
+  Object.defineProperty(PushNotification.prototype, "lastTappedNotification", {
+    get: function () {
+      var notificationCopy = null;
+
+      if(lastTappedNotification){
+        notificationCopy = {};
+        for (var attr_name in lastTappedNotification){
+          notificationCopy[attr_name] = lastTappedNotification[attr_name];
+        }
+      }
+
+      return notificationCopy;
+    }
+  });
+
   //-------------------------------------------------------------------
 
   if(!window.plugins) {
@@ -99,3 +129,5 @@
   }
 
   module.exports = PushNotification;
+
+});

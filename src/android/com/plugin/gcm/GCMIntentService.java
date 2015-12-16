@@ -38,7 +38,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 
     @Override
     protected void onMessage(Context context, Intent intent) {
-        boolean isAppInForeground = NotificationService.getInstance(context).isForeground();
+//        boolean isAppInForeground = NotificationService.getInstance(context).isForeground();
 
         Bundle extras = intent.getExtras();
         if (extras != null) {
@@ -143,5 +143,10 @@ public class GCMIntentService extends GCMBaseIntentService {
     public void onError(Context context, String errorId) {
         Log.e(TAG, "onError - errorId: " + errorId);
     }
+
+	public static void enqueueOnResumeNotification(Context context, Object notification) {
+		NotificationService.getInstance(context).enqueueOnResumeNotification(notification);
+		
+	}
 
 }

@@ -1,11 +1,18 @@
 package com.plugin.gcm;
 
-import android.app.NotificationManager;
-
-import com.google.android.gcm.GCMRegistrar;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.UUID;
 
 import com.appgyver.cordova.AGCordovaApplicationInterface;
-import com.appgyver.event.EventService;
+//import com.appgyver.event.EventService;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaWebView;
@@ -14,18 +21,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.android.gcm.GCMRegistrar;
+
+import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-import java.util.TimeZone;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.text.DateFormat;
 
 /**
  * Notification Service - Handles Push Notification and deliver the messages to all web views that
@@ -72,6 +73,8 @@ public class NotificationService {
     private String mRegistrationID = null;
 
     private List<JSONObject> mNotifications = new ArrayList<JSONObject>();
+    
+    private Deque<JSONObject> mOnResumeNotifications = new LinkedList<JSONObject>();
 
     private boolean mForeground = false;
 
@@ -185,13 +188,22 @@ public class NotificationService {
             webViewReference.notifyRegistered();
         }
     }
+    
+    public void notifyNotificationTappedToAllWebviews(JSONObject notification){
+    	
+    	for (WebViewReference webViewReference : mWebViewReferences) {
+            webViewReference.notifyNotificationTapped(notification);
+        }
+	}
 
     public void onMessage(Bundle extras) {
         JSONObject notification = createNotificationJSON(extras);
 
-        Log.v(TAG, "onMessage() -> isForeground: " + isForeground() + " isApplicationRunning "
-                + isApplicationRunning() + " notification: "
-                + notification);
+        Log.v(TAG, "onMessage() ->" 
+    		+ " isForeground: "        + isForeground        () 
+    		+ " isApplicationRunning " + isApplicationRunning() 
+    		+ " notification: "        + notification
+		);
 
         addNotification(notification);
 
@@ -211,6 +223,17 @@ public class NotificationService {
         for (JSONObject notification : mNotifications) {
             webViewReference.sendNotification(notification);
         }
+    }
+    
+    public void flushNotificationTappedToWebView(){
+    	
+    	JSONObject notification;
+    	
+    	while(null!=(notification=this.mOnResumeNotifications.peek())){
+    		this.mOnResumeNotifications.pop();
+    		this.notifyNotificationTappedToAllWebviews(notification);
+    	}
+    	
     }
 
     private void addNotification(JSONObject notification) {
@@ -361,7 +384,19 @@ public class NotificationService {
         mWebViewReferences.clear();
         mNotifications.clear();
     }
-
+    
+	public void enqueueOnResumeNotification(Object notification) {
+		
+		JSONObject jsonNotification;
+		
+		try{
+			jsonNotification = this.createNotificationJSON((Bundle) notification);
+		}catch(ClassCastException c){
+			jsonNotification = new JSONObject();
+		}
+		
+		this.mOnResumeNotifications.add(jsonNotification);
+	}
 
     static class WebViewReference {
 
@@ -384,7 +419,16 @@ public class NotificationService {
             mWebView = webView;
         }
 
-        public void destroy() {
+		public void notifyNotificationTapped(JSONObject notification) {
+        	
+			this.mWebView.loadUrl(
+				"javascript:(function (n){if(window.plugins.pushNotification._onNotificationTapped) "
+				+ "window.plugins.pushNotification._onNotificationTapped(n);"
+				+ "})(" + notification.toString() + ")"
+			);			
+		}
+
+		public void destroy() {
             mWebView = null;
             mRegisterCallBack = null;
             mNotificationForegroundCallBack = null;
@@ -428,9 +472,9 @@ public class NotificationService {
 
         public void sendNotification(JSONObject notification) {
             if (hasNotification(notification)) {
-                //Log.v(TAG,
-                //        "sendNotification() - Webview already received this notification. skipping callback. webview: "
-                //                + getWebView());
+                Log.v(TAG,
+                        "sendNotification() - Webview already received this notification. skipping callback. webview: "
+                                + getWebView());
                 return;
             }
 

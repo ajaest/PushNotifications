@@ -28,6 +28,14 @@ public class PushHandlerActivity extends Activity {
         Log.d(TAG, "onCreate - isApplicationRunning: " + isApplicationRunning());
 
         GCMIntentService.cancelNotification(this);
+        
+        
+        Bundle extras       = getIntent().getExtras();
+        Object notification = null;
+        if(extras!=null)
+        	notification  = extras.get(PushHandlerActivity.PUSH_BUNDLE);
+        
+        GCMIntentService.enqueueOnResumeNotification(this, notification);
 
         if ( !isApplicationRunning() ) {
             forceMainActivityReload();

@@ -40,7 +40,7 @@ public class PushPlugin extends CordovaPlugin {
 
   private void readSenderIdFromCordovaConfig() {
     Bundle extras = cordova.getActivity().getIntent().getExtras();
-    if(extras.containsKey(GCM_SENDER_ID)) {
+    if(extras!=null && extras.containsKey(GCM_SENDER_ID)) {
       String senderID = extras.getString(GCM_SENDER_ID);
       NotificationService
       .getInstance(getApplicationContext())
@@ -170,10 +170,13 @@ public class PushPlugin extends CordovaPlugin {
     super.onResume(multitasking);
 
     Log.v(TAG, "onResume() -> webView: " + webView);
-
-    NotificationService
-    .getInstance(getApplicationContext())
-    .setForeground(true);
+    
+    NotificationService notificationService = NotificationService
+    	    .getInstance(getApplicationContext())
+    ;
+    
+    notificationService.setForeground(true);
+    notificationService.flushNotificationTappedToWebView();
   }
 
 
